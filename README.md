@@ -3,7 +3,6 @@
 **The crispiest, fluffiest, high-performance HTML screen recorder.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![vibe coded with: Gemini AI](https://img.shields.io/badge/vibe%20coded%20with-Gemini%20AI-blueviolet)](https://gemini.google.com/)
 
 A lightweight, no-bulls**t, pure JavaScript solution for recording your browser or desktop directly from an HTML page. **FluffySnapCracker** captures crisp video at high frame rates, without bloating your memory, and saves it instantly as a high-quality WebM file. *And yes, it's FREE for EVERYONE.*
 
