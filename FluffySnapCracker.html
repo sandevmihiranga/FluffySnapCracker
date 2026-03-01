@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FluffySnapCracker</title>
+    <link rel="icon" type="image/png" href="FluffySnapCracker.png">
+    
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            background: #f4f4f9; 
+            margin: 0; 
+            overflow: hidden;
+        }
+
+        /* Top Left Brand Corner */
+        .brand-corner {
+            position: absolute;
+            top: 20px;
+            left: 20px; /* Moved to Left */
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: 0.3s;
+            z-index: 100;
+        }
+
+        .brand-corner:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .brand-corner img {
+            width: 40px;
+            border-radius: 8px;
+        }
+
+        .brand-corner span {
+            font-weight: bold;
+            color: #333;
+            font-size: 1rem;
+            letter-spacing: -0.5px;
+        }
+
+        /* UI Elements */
+        .controls { margin-bottom: 25px; z-index: 10; }
+        
+        button { 
+            padding: 14px 28px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 10px; 
+            margin: 0 10px; 
+            transition: all 0.2s ease; 
+            font-weight: 600; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        }
+        
+        #start { background-color: #28a745; color: white; }
+        #pause { background-color: #ffc107; color: #333; }
+        #stop { background-color: #dc3545; color: white; }
+        
+        button:disabled { background-color: #ccc; color: #666; cursor: not-allowed; box-shadow: none; transform: none !important; }
+        button:hover:not(:disabled) { transform: scale(1.05); filter: brightness(1.1); }
+        
+        video { 
+            width: 85%; 
+            max-width: 900px; 
+            border: 6px solid #fff; 
+            border-radius: 20px; 
+            background: #1a1a1a; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15); 
+        }
+
+        .status { 
+            margin-top: 20px; 
+            font-size: 1.3rem; 
+            font-weight: 700; 
+            color: #555; 
+            min-height: 1.6em; 
+            text-transform: uppercase;
+        }
+        
+        .countdown-pulse { 
+            color: #dc3545; 
+            font-size: 2.5rem; 
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brand-corner">
+        <img src="FluffySnapCracker.png" alt="Logo">
+        <span>FluffySnapCracker</span>
+    </div>
+
+    <div class="controls">
+        <button id="start">Start Recording</button>
+        <button id="pause" disabled>Pause</button>
+        <button id="stop" disabled>Stop & Save</button>
+    </div>
+
+    <div class="status" id="status">READY TO SNAP</div>
+    
+    <video id="preview" autoplay muted></video>
+
+    <script>
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        const startBtn = document.getElementById('start');
+        const pauseBtn = document.getElementById('pause');
+        const stopBtn = document.getElementById('stop');
+        const videoPreview = document.getElementById('preview');
+        const statusText = document.getElementById('status');
+
+        const startCountdown = (seconds) => {
+            return new Promise((resolve) => {
+                let counter = seconds;
+                statusText.classList.add('countdown-pulse');
+                
+                const interval = setInterval(() => {
+                    statusText.innerText = `SNAP IN... ${counter}`;
+                    counter--;
+                    
+                    if (counter < 0) {
+                        clearInterval(interval);
+                        statusText.classList.remove('countdown-pulse');
+                        resolve();
+                    }
+                }, 1000);
+            });
+        };
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { cursor: "always" },
+                    audio: true
+                });
+
+                startBtn.disabled = true;
+                await startCountdown(5);
+
+                recordedChunks = [];
+                videoPreview.srcObject = stream;
+                
+                mediaRecorder = new MediaRecorder(stream, { 
+                    mimeType: 'video/webm; codecs=vp9' 
+                });
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) recordedChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `FluffySnap-${Date.now()}.webm`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    stream.getTracks().forEach(track => track.stop());
+                    videoPreview.srcObject = null;
+                };
+
+                mediaRecorder.start();
+                statusText.innerText = "🔴 RECORDING LIVE";
+                pauseBtn.disabled = false;
+                stopBtn.disabled = false;
+
+            } catch (err) {
+                console.error("Error: " + err);
+                statusText.innerText = "CRACKER ERROR: Permission Denied";
+                startBtn.disabled = false;
+            }
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            if (mediaRecorder.state === "recording") {
+                mediaRecorder.pause();
+                statusText.innerText = "⏸️ PAUSED";
+                pauseBtn.innerText = "RESUME";
+            } else if (mediaRecorder.state === "paused") {
+                mediaRecorder.resume();
+                statusText.innerText = "🔴 RECORDING LIVE";
+                pauseBtn.innerText = "PAUSE";
+            }
+        });
+
+        stopBtn.addEventListener('click', () => {
+            mediaRecorder.stop();
+            statusText.innerText = "✅ SNAP SAVED!";
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            stopBtn.disabled = true;
+            pauseBtn.innerText = "PAUSE";
+        });
+    </script>
+</body>
+</html>
