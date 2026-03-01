@@ -11,7 +11,7 @@ A lightweight, no-bulls**t, pure JavaScript solution for recording your browser 
 ## 🔥 Features
 
 * 🚀 **High Performance:** Captures $60\text{ fps}$ (or higher) with minimal system load.
-* 🪶 **Ultra-Lightweight:** Written in pure HTML/CSS/JS (no heavy framework dependencies).
+* 🪶 **Ultra-Lightweight:** Written in pure HTML with JS/CSS integrated into the HTML code (no heavy framework dependencies).
 * 🌐 **In-Browser:** No extensions or plugins required.
 * 💾 **Instant Download:** Automatically generates a smooth `.webm` file when you stop recording.
 * 🎛️ **Audio Support:** Option to include system audio or microphone input.
